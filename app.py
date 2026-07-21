@@ -3,7 +3,7 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS מותאם: הכרטיסייה כולה כיחידה אחת מעוצבת ---
+# --- עיצוב CSS מותאם: כרטיסיות כחול-תכלת עם כתב שחור ---
 st.markdown("""
     <style>
         /* מרכוז טקסט כללי וכותרות */
@@ -11,24 +11,25 @@ st.markdown("""
             text-align: center !important;
         }
         
-        /* עיצוב כרטיסיית שחקן שכוללת את התיבה והטקסט ביחד */
+        /* עיצוב כרטיסיית שחקן - רקע תכלת-כחול, מסגרת וכתב שחור */
         div[data-testid="stColumn"] div[data-testid="stCheckbox"] {
-            background-color: #eef2f6 !important;
-            border: 2px solid #cbd5e1 !important;
+            background-color: #E0F2FE !important; /* תכלת-כחול בהיר */
+            border: 2px solid #38BDF8 !important;   /* מסגרת כחולה */
             border-radius: 12px !important;
             padding: 12px 8px !important;
             margin-bottom: 12px !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
         }
 
-        /* עיצוב הטקסט בתוך התיבה */
+        /* הגדרת גופן שחור בולט לטקסט בתוך הכרטיסיות */
         div[data-testid="stCheckbox"] label span p {
             font-size: 15px !important;
             line-height: 1.4 !important;
-            color: #1e293b !important;
+            color: #000000 !important; /* כתב שחור חזק */
+            font-weight: 500 !important;
             margin: 0 !important;
         }
 
@@ -118,7 +119,7 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        # השם, העמדה, הרמה ותיבת הסימון - כולם יחד בתוך הריבוע
+        # השם בבלד והפרטים מתחתיו - בתוך ריבוע תכלת עם כתב שחור
         label_text = f"**{p['name']}**\n\n{p['position']} | {p['level']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
             selected_defaults.append(p)
