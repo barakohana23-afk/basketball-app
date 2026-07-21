@@ -192,28 +192,49 @@ if st.session_state.players:
             st.session_state.players = []
             st.rerun()
 
-    # --- אלגוריתם החלוקה ---
+    # --- אלגוריתם החלוקה המעודכן ---
     def split_teams(players_list, max_players):
-        sorted_p = sorted(players_list, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
-        
-        positions = {"רכז": [], "קלעי": [], "גבוה": []}
-        for p in sorted_p:
-            positions[p["position"]].append(p)
-            
+        # 1. הפרדה לקבוצות איכות ועמדות
+        strong_bigs = [p for p in players_list if p["position"] == "גבוה" and p["level"] == "חזק"]
+        other_bigs = [p for p in players_list if p["position"] == "גבוה" and p["level"] != "חזק"]
+        guards = [p for p in players_list if p["position"] == "רכז"]
+        shooters = [p for p in players_list if p["position"] == "קלעי"]
+
+        # מיון יתר העמדות לפי רמה (מהחזק לחלש)
+        other_bigs = sorted(other_bigs, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
+        guards = sorted(guards, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
+        shooters = sorted(shooters, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
+
         team_a, team_b, waiting = [], [], []
         toggle = True
-        
-        for pos, pos_players in positions.items():
-            for p in pos_players:
-                if len(team_a) < max_players or len(team_b) < max_players:
-                    if len(team_a) < max_players and (toggle or len(team_b) >= max_players):
-                        team_a.append(p)
-                    else:
-                        team_b.append(p)
-                    toggle = not toggle
+
+        def add_to_team(player):
+            nonlocal toggle
+            if len(team_a) < max_players or len(team_b) < max_players:
+                if len(team_a) < max_players and (toggle or len(team_b) >= max_players):
+                    team_a.append(player)
                 else:
-                    waiting.append(p)
-                    
+                    team_b.append(player)
+                toggle = not toggle
+            else:
+                waiting.append(player)
+
+        # 2. פיזור גבוהים חזקים ראשונים (כדי שיהיה מצינג'-אפ פיזי בזה מול זה)
+        for p in strong_bigs:
+            add_to_team(p)
+
+        # 3. פיזור שאר הגבוהים
+        for p in other_bigs:
+            add_to_team(p)
+
+        # 4. פיזור רכזים
+        for p in guards:
+            add_to_team(p)
+
+        # 5. פיזור קלעים
+        for p in shooters:
+            add_to_team(p)
+
         return team_a, team_b, waiting
 
     # --- כפתור החלוקה ---
