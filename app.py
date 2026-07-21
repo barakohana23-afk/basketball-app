@@ -3,10 +3,10 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS מורחב למרכוז מלא של כל הרכיבים ---
+# --- עיצוב CSS למרכוז מלא ויישור גבהים (Vertical Alignment) ---
 st.markdown("""
     <style>
-        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות של שדות (Labels) */
+        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות של שדות */
         html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
             text-align: center !important;
         }
@@ -19,7 +19,12 @@ st.markdown("""
             text-align: center !important;
         }
         
-        /* מרכוז שדות מספר (number_input) והפקדים הפנימיים */
+        /* יישור אנכי (בדיוק באותו גובה) עבור שורות השחקנים ברשימה */
+        [data-testid="stHorizontalBlock"] {
+            align-items: center !important;
+        }
+
+        /* מרכוז שדות מספר (number_input) */
         div[data-testid="stNumberInput"] {
             margin: 0 auto !important;
             max-width: 300px;
@@ -85,7 +90,7 @@ if st.session_state.players:
     st.subheader(f"📋 רשימת השחקנים ({len(st.session_state.players)})")
     st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות בטבלה למטה:")
 
-    # עריכת השחקנים ברשימה
+    # עריכת השחקנים ברשימה (כל האלמנטים יישרו קו גובה מושלם)
     to_delete = None
     for idx, player in enumerate(st.session_state.players):
         col_name, col_pos, col_lvl, col_del = st.columns([3, 2, 2, 1])
