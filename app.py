@@ -3,7 +3,7 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS מותאם: כרטיסיות כחול-תכלת עם כתב שחור ---
+# --- עיצוב CSS מותאם: דריסת צבע פונט לשחור גם בסלולר וב-Dark Mode ---
 st.markdown("""
     <style>
         /* מרכוז טקסט כללי וכותרות */
@@ -11,7 +11,7 @@ st.markdown("""
             text-align: center !important;
         }
         
-        /* עיצוב כרטיסיית שחקן - רקע תכלת-כחול, מסגרת וכתב שחור */
+        /* עיצוב כרטיסיית שחקן - רקע תכלת-כחול, מסגרת */
         div[data-testid="stColumn"] div[data-testid="stCheckbox"] {
             background-color: #E0F2FE !important; /* תכלת-כחול בהיר */
             border: 2px solid #38BDF8 !important;   /* מסגרת כחולה */
@@ -24,12 +24,17 @@ st.markdown("""
             align-items: center !important;
         }
 
-        /* הגדרת גופן שחור בולט לטקסט בתוך הכרטיסיות */
+        /* כפיית פונט שחור על כל התגיות הפנימיות למניעת בעיות Dark Mode בסלולר */
+        div[data-testid="stColumn"] div[data-testid="stCheckbox"] * {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important; /* חובה עבור דפדפני ספארי וסלולר */
+        }
+
+        /* הגדרת גודל ועיצוב הטקסט בתוך הכרטיסייה */
         div[data-testid="stCheckbox"] label span p {
             font-size: 15px !important;
             line-height: 1.4 !important;
-            color: #000000 !important; /* כתב שחור חזק */
-            font-weight: 500 !important;
+            font-weight: 600 !important;
             margin: 0 !important;
         }
 
@@ -119,7 +124,6 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        # השם בבלד והפרטים מתחתיו - בתוך ריבוע תכלת עם כתב שחור
         label_text = f"**{p['name']}**\n\n{p['position']} | {p['level']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
             selected_defaults.append(p)
