@@ -25,7 +25,7 @@ st.markdown("""
             font-size: 14px !important;
         }
 
-        /* יישור אנכי (בדיוק באותו גובה) לכל העמודות ברשימה */
+        /* יישור אנכי לכל העמודות ברשימה */
         [data-testid="stHorizontalBlock"] {
             align-items: center !important;
         }
@@ -60,6 +60,23 @@ LEVEL_MAP = {"חלש": 1, "בינוני": 2, "חזק": 3}
 LEVEL_OPTIONS = ["חלש", "בינוני", "חזק"]
 POSITION_OPTIONS = ["רכז", "קלעי", "גבוה"]
 
+# רשימת שחקני הבית הקבועים
+DEFAULT_PLAYERS = [
+    {"name": "לירון", "position": "גבוה", "level": "חזק"},
+    {"name": "ירין", "position": "רכז", "level": "חזק"},
+    {"name": "ברק", "position": "רכז", "level": "חזק"},
+    {"name": "מוטי", "position": "רכז", "level": "בינוני"},
+    {"name": "בנצי", "position": "קלעי", "level": "חזק"},
+    {"name": "חיים", "position": "קלעי", "level": "חזק"},
+    {"name": "חזוט", "position": "קלעי", "level": "בינוני"},
+    {"name": "אילן", "position": "קלעי", "level": "חזק"},
+    {"name": "שאול", "position": "גבוה", "level": "בינוני"},
+    {"name": "דודי", "position": "קלעי", "level": "חלש"},
+    {"name": "דור", "position": "גבוה", "level": "חזק"},
+    {"name": "איציק", "position": "קלעי", "level": "בינוני"},
+    {"name": "יהודה", "position": "קלעי", "level": "חלש"},
+]
+
 # שמירת רשימת השחקנים בזיכרון הריצה של האפליקציה
 if "players" not in st.session_state:
     st.session_state.players = []
@@ -68,8 +85,44 @@ if "players" not in st.session_state:
 st.subheader("⚙️ הגדרת המשחק")
 max_per_team = st.number_input("מספר שחקנים מקסימלי בכל קבוצה", min_value=1, max_value=15, value=5, step=1)
 
-# --- טופס להוספת שחקן ---
-st.subheader("➕ הוספת שחקן חדש")
+st.divider()
+
+# --- בחירה מהירה משחקנים קבועים ---
+st.subheader("⚡ בחירה מהירה של שחקנים קבועים")
+st.write("סמן את השחקנים שהגיעו היום ולחץ על הוספה:")
+
+# תצוגה נוחה בעמודות (3 שחקנים בשורה)
+cols = st.columns(3)
+selected_defaults = []
+
+for idx, p in enumerate(DEFAULT_PLAYERS):
+    col = cols[idx % 3]
+    with col:
+        label = f"{p['name']} ({p['position']} | {p['level']})"
+        if st.checkbox(label, key=f"default_{idx}"):
+            selected_defaults.append(p)
+
+if st.button("➕ הוסף את המסומנים לרשימת המשחק"):
+    added_count = 0
+    existing_names = [p["name"].strip().lower() for p in st.session_state.players]
+    
+    for p in selected_defaults:
+        if p["name"].strip().lower() not in existing_names:
+            st.session_state.players.append(p.copy())
+            added_count += 1
+            
+    if added_count > 0:
+        st.success(f"נוספו {added_count} שחקנים לרשימה!")
+        st.rerun()
+    elif len(selected_defaults) == 0:
+        st.warning("לא סומנו שחקנים לבחירה.")
+    else:
+        st.info("כל השחקנים המסומנים כבר נמצאים ברשימה!")
+
+st.divider()
+
+# --- טופס להוספת שחקן חדש/אורח ---
+st.subheader("➕ הוספת שחקן חדש / אורח")
 with st.form("add_player_form", clear_on_submit=True):
     col1, col2, col3 = st.columns(3)
     
@@ -83,19 +136,23 @@ with st.form("add_player_form", clear_on_submit=True):
     submit_button = st.form_submit_button("הוסף לרשימה")
     
     if submit_button:
-        if name.strip():
-            st.session_state.players.append({"name": name.strip(), "position": position, "level": level})
-            st.success(f"השחקן {name} נוסף בהצלחה!")
-            st.rerun()
+        clean_name = name.strip()
+        if clean_name:
+            existing_names = [p["name"].strip().lower() for p in st.session_state.players]
+            if clean_name.lower() in existing_names:
+                st.error(f"⚠️ השחקן '{clean_name}' כבר קיים ברשימה!")
+            else:
+                st.session_state.players.append({"name": clean_name, "position": position, "level": level})
+                st.success(f"השחקן {clean_name} נוסף בהצלחה!")
+                st.rerun()
         else:
             st.error("נא להזין שם שחקן.")
 
 # --- הצגה ועריכת שחקנים ---
 if st.session_state.players:
-    st.subheader(f"📋 רשימת השחקנים ({len(st.session_state.players)})")
+    st.subheader(f"📋 רשימת השחקנים למשחק ({len(st.session_state.players)})")
     st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות ברשימה למטה:")
 
-    # עריכת השחקנים ברשימה (עם תיבות קטנות יותר)
     to_delete = None
     for idx, player in enumerate(st.session_state.players):
         col_name, col_pos, col_lvl, col_del = st.columns([3, 2, 2, 1])
