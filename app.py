@@ -3,7 +3,7 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS מותאם: הקטנת התיבות ומרכוז הטקסטים ---
+# --- עיצוב CSS מותאם: הקטנת התיבות, מרכוז וכרטיסיות שחקנים ---
 st.markdown("""
     <style>
         /* מרכוז טקסט כללי וכותרות */
@@ -11,6 +11,17 @@ st.markdown("""
             text-align: center !important;
         }
         
+        /* עיצוב כרטיסיות השחקנים (ריבועים צבעוניים) */
+        div[data-testid="stColumn"] > div > div[data-testid="stVerticalBlock"] > div.player-card {
+            background-color: #f0f4f8;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
         /* הקטנת הגובה והרווחים בתיבות הבחירה ברשימה */
         div[data-baseweb="select"] {
             min-height: 32px !important;
@@ -87,20 +98,22 @@ max_per_team = st.number_input("מספר שחקנים מקסימלי בכל קב
 
 st.divider()
 
-# --- בחירה מהירה משחקנים קבועים ---
+# --- בחירה מהירה משחקנים קבועים (בעיצוב ריבועים צבעוניים) ---
 st.subheader("⚡ בחירה מהירה של שחקנים קבועים")
 st.write("סמן את השחקנים שהגיעו היום ולחץ על הוספה:")
 
-# תצוגה נוחה בעמודות (3 שחקנים בשורה)
 cols = st.columns(3)
 selected_defaults = []
 
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        label = f"{p['name']} ({p['position']} | {p['level']})"
+        # עטיפת השחקן בתוך ריבוע מעוצב
+        st.markdown('<div class="player-card">', unsafe_allow_html=True)
+        label = f"**{p['name']}**\n\n({p['position']} | {p['level']})"
         if st.checkbox(label, key=f"default_{idx}"):
             selected_defaults.append(p)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 if st.button("➕ הוסף את המסומנים לרשימת המשחק"):
     added_count = 0
@@ -192,7 +205,7 @@ if st.session_state.players:
             st.session_state.players = []
             st.rerun()
 
-    # --- אלגוריתם החלוקה המעודכן ---
+    # --- אלגוריתם החלוקה ---
     def split_teams(players_list, max_players):
         # 1. הפרדה לקבוצות איכות ועמדות
         strong_bigs = [p for p in players_list if p["position"] == "גבוה" and p["level"] == "חזק"]
@@ -219,7 +232,7 @@ if st.session_state.players:
             else:
                 waiting.append(player)
 
-        # 2. פיזור גבוהים חזקים ראשונים (כדי שיהיה מצינג'-אפ פיזי בזה מול זה)
+        # 2. פיזור גבוהים חזקים ראשונים (להבטחת מצ'אפ הגנתי מתאים)
         for p in strong_bigs:
             add_to_team(p)
 
