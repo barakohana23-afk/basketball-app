@@ -1,19 +1,43 @@
 import streamlit as st
-import pandas as pd
 
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# עיצוב CSS למרכוז טקסטים וכותרות
+# --- עיצוב CSS מקיף למרכוז מלא בכל הרכיבים והתיבות ---
 st.markdown("""
     <style>
-        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label {
+        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות */
+        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
             text-align: center !important;
         }
-        .stButton>button {
-            display: block !important;
-            margin: 0 auto !important;
+        
+        /* מרכוז תוויות הסבר של שדות קלט (Labels) */
+        .stWidgetLabel label, label[data-testid="stWidgetLabel"] {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+            text-align: center !important;
         }
+        
+        /* יישור אנכי (בדיוק באותו גובה) לכל העמודות ברשימה */
+        [data-testid="stHorizontalBlock"] {
+            align-items: center !important;
+        }
+
+        /* מרכוז הטקסט הנבחר והפנימי בתוך תיבות Selectbox */
+        div[data-baseweb="select"] {
+            text-align: center !important;
+        }
+        div[data-baseweb="select"] > div {
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        div[data-baseweb="select"] span {
+            width: 100% !important;
+            text-align: center !important;
+        }
+
+        /* מרכוז שדות מספר (number_input) */
         div[data-testid="stNumberInput"] {
             margin: 0 auto !important;
             max-width: 300px;
@@ -21,6 +45,14 @@ st.markdown("""
         div[data-testid="stNumberInput"] input {
             text-align: center !important;
         }
+
+        /* מרכוז כפתורים */
+        .stButton>button {
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        
+        /* מרכוז שדות קלט טקסט */
         div[data-baseweb="input"] input {
             text-align: center !important;
         }
@@ -30,11 +62,12 @@ st.markdown("""
 st.title("🏀 מחלק הקבוצות לכדורסל")
 st.write("הכנס את רשימת השחקנים, העמדה והרמה לקבלת קבוצות מאוזנות!")
 
+# מיפוי רמות ממילים למספרים לצורך חישוב האלגוריתם
 LEVEL_MAP = {"חלש": 1, "בינוני": 2, "חזק": 3}
 LEVEL_OPTIONS = ["חלש", "בינוני", "חזק"]
 POSITION_OPTIONS = ["רכז", "קלעי", "גבוה"]
 
-# שמירת רשימת השחקנים
+# שמירת רשימת השחקנים בזיכרון הריצה של האפליקציה
 if "players" not in st.session_state:
     st.session_state.players = []
 
@@ -58,46 +91,52 @@ with st.form("add_player_form", clear_on_submit=True):
     
     if submit_button:
         if name.strip():
-            st.session_state.players.append({"מחיקה": False, "שם": name.strip(), "עמדה": position, "רמה": level})
+            st.session_state.players.append({"name": name.strip(), "position": position, "level": level})
             st.success(f"השחקן {name} נוסף בהצלחה!")
             st.rerun()
         else:
             st.error("נא להזין שם שחקן.")
 
-# --- הצגה ועריכת שחקנים בטבלה מעוצבת ---
+# --- הצגה ועריכת שחקנים ---
 if st.session_state.players:
     st.subheader(f"📋 רשימת השחקנים ({len(st.session_state.players)})")
-    st.write("💡 לחץ על תא בטבלה כדי לשנות עמדה/רמה, או סמן בתיבה כדי למחוק שחקן:")
+    st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות בטבלה למטה:")
 
-    df = pd.DataFrame(st.session_state.players)
+    # עריכת השחקנים ברשימה
+    to_delete = None
+    for idx, player in enumerate(st.session_state.players):
+        col_name, col_pos, col_lvl, col_del = st.columns([3, 2, 2, 1])
+        
+        with col_name:
+            st.markdown(f"**{player['name']}**")
+        with col_pos:
+            new_pos = st.selectbox(
+                f"עמדה עבור {player['name']}",
+                POSITION_OPTIONS,
+                index=POSITION_OPTIONS.index(player["position"]),
+                key=f"pos_{idx}",
+                label_visibility="collapsed"
+            )
+            st.session_state.players[idx]["position"] = new_pos
+        with col_lvl:
+            new_lvl = st.selectbox(
+                f"רמה עבור {player['name']}",
+                LEVEL_OPTIONS,
+                index=LEVEL_OPTIONS.index(player["level"]),
+                key=f"lvl_{idx}",
+                label_visibility="collapsed"
+            )
+            st.session_state.players[idx]["level"] = new_lvl
+        with col_del:
+            if st.button("❌", key=f"del_{idx}"):
+                to_delete = idx
 
-    # הצגת טבלה אינטראקטיבית עם יישור ומבנה מותאם
-    edited_df = st.data_editor(
-        df,
-        column_config={
-            "מחיקה": st.column_config.CheckboxColumn("מחק?", default=False, width="small"),
-            "שם": st.column_config.TextColumn("שם השחקן", disabled=True),
-            "עמדה": st.column_config.SelectboxColumn("עמדה", options=POSITION_OPTIONS, required=True),
-            "רמה": st.column_config.SelectboxColumn("רמה", options=LEVEL_OPTIONS, required=True),
-        },
-        hide_index=True,
-        use_container_width=True,
-        key="players_editor"
-    )
-
-    # סינון שחקנים שסומנו למחיקה
-    filtered_players = [row for row in edited_df.to_dict("records") if not row["מחיקה"]]
-    
-    # אם נמחקו שחקנים - מעדכנים את הזיכרון ומדרנרים מחדש
-    if len(filtered_players) != len(st.session_state.players):
-        st.session_state.players = filtered_players
+    if to_delete is not None:
+        st.session_state.players.pop(to_delete)
         st.rerun()
-    else:
-        st.session_state.players = filtered_players
 
     st.write("---")
     col_clear, col_split = st.columns([1, 2])
-    
     with col_clear:
         if st.button("🗑️ נקה את כל הרשימה"):
             st.session_state.players = []
@@ -105,11 +144,11 @@ if st.session_state.players:
 
     # --- אלגוריתם החלוקה ---
     def split_teams(players_list, max_players):
-        sorted_p = sorted(players_list, key=lambda x: LEVEL_MAP[x["רמה"]], reverse=True)
+        sorted_p = sorted(players_list, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
         
         positions = {"רכז": [], "קלעי": [], "גבוה": []}
         for p in sorted_p:
-            positions[p["עמדה"]].append(p)
+            positions[p["position"]].append(p)
             
         team_a, team_b, waiting = [], [], []
         toggle = True
@@ -138,14 +177,14 @@ if st.session_state.players:
             with col_a:
                 st.success(f"🟢 **קבוצה א' ({len(team_a)}/{max_per_team})**")
                 for p in team_a:
-                    st.write(f"• **{p['שם']}** ({p['עמדה']} | {p['רמה']})")
+                    st.write(f"• **{p['name']}** ({p['position']} | {p['level']})")
                     
             with col_b:
                 st.info(f"🔵 **קבוצה ב' ({len(team_b)}/{max_per_team})**")
                 for p in team_b:
-                    st.write(f"• **{p['שם']}** ({p['עמדה']} | {p['רמה']})")
+                    st.write(f"• **{p['name']}** ({p['position']} | {p['level']})")
                     
             if waiting:
                 st.warning(f"📋 **רשימת מזמינים / המתנה ({len(waiting)})**")
                 for p in waiting:
-                    st.write(f"• **{p['שם']}** ({p['עמדה']} | {p['רמה']})")
+                    st.write(f"• **{p['name']}** ({p['position']} | {p['level']})")
