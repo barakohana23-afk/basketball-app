@@ -3,10 +3,10 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS למרכוז מלא ויישור גבהים (Vertical Alignment) ---
+# --- עיצוב CSS ממוקד למרכוז מלא ויישור גבהים ---
 st.markdown("""
     <style>
-        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות של שדות */
+        /* מרכוז טקסט כללי וכותרות */
         html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
             text-align: center !important;
         }
@@ -19,9 +19,18 @@ st.markdown("""
             text-align: center !important;
         }
         
-        /* יישור אנכי (בדיוק באותו גובה) עבור שורות השחקנים ברשימה */
+        /* יישור אנכי (בדיוק באותו גובה) לכל העמודות ברשימה */
         [data-testid="stHorizontalBlock"] {
             align-items: center !important;
+        }
+
+        /* מרכוז הטקסט הפנימי בתוך תיבות ה-Selectbox */
+        div[data-baseweb="select"] > div {
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        div[data-baseweb="select"] * {
+            text-align: center !important;
         }
 
         /* מרכוז שדות מספר (number_input) */
@@ -39,8 +48,8 @@ st.markdown("""
             margin: 0 auto !important;
         }
         
-        /* מרכוז שדות קלט טקסט ותפריטים נפתחים */
-        div[data-baseweb="input"], div[data-baseweb="select"] {
+        /* מרכוז שדות קלט טקסט */
+        div[data-baseweb="input"] {
             justify-content: center !important;
             text-align: center !important;
         }
@@ -90,7 +99,7 @@ if st.session_state.players:
     st.subheader(f"📋 רשימת השחקנים ({len(st.session_state.players)})")
     st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות בטבלה למטה:")
 
-    # עריכת השחקנים ברשימה (כל האלמנטים יישרו קו גובה מושלם)
+    # עריכת השחקנים ברשימה
     to_delete = None
     for idx, player in enumerate(st.session_state.players):
         col_name, col_pos, col_lvl, col_del = st.columns([3, 2, 2, 1])
