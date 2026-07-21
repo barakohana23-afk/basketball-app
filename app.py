@@ -3,15 +3,15 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS ממוקד למרכוז מלא ויישור גבהים ---
+# --- עיצוב CSS מקיף למרכוז מלא בכל הרכיבים והתיבות ---
 st.markdown("""
     <style>
-        /* מרכוז טקסט כללי וכותרות */
+        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות */
         html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
             text-align: center !important;
         }
         
-        /* מרכוז תוויות הסבר של שדות קלט */
+        /* מרכוז תוויות הסבר של שדות קלט (Labels) */
         .stWidgetLabel label, label[data-testid="stWidgetLabel"] {
             display: flex !important;
             justify-content: center !important;
@@ -24,12 +24,16 @@ st.markdown("""
             align-items: center !important;
         }
 
-        /* מרכוז הטקסט הפנימי בתוך תיבות ה-Selectbox */
+        /* מרכוז הטקסט הנבחר והפנימי בתוך תיבות Selectbox */
+        div[data-baseweb="select"] {
+            text-align: center !important;
+        }
         div[data-baseweb="select"] > div {
             justify-content: center !important;
             text-align: center !important;
         }
-        div[data-baseweb="select"] * {
+        div[data-baseweb="select"] span {
+            width: 100% !important;
             text-align: center !important;
         }
 
@@ -49,14 +53,13 @@ st.markdown("""
         }
         
         /* מרכוז שדות קלט טקסט */
-        div[data-baseweb="input"] {
-            justify-content: center !important;
+        div[data-baseweb="input"] input {
             text-align: center !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🏀 מחולק הקבוצות לכדורסל")
+st.title("🏀 מחלק הקבוצות לכדורסל")
 st.write("הכנס את רשימת השחקנים, העמדה והרמה לקבלת קבוצות מאוזנות!")
 
 # מיפוי רמות ממילים למספרים לצורך חישוב האלגוריתם
