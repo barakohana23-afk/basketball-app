@@ -3,38 +3,31 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS מקיף למרכוז מלא בכל הרכיבים והתיבות ---
+# --- עיצוב CSS מותאם: הקטנת התיבות ומרכוז הטקסטים ---
 st.markdown("""
     <style>
-        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות */
-        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
+        /* מרכוז טקסט כללי וכותרות */
+        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label {
             text-align: center !important;
         }
         
-        /* מרכוז תוויות הסבר של שדות קלט (Labels) */
-        .stWidgetLabel label, label[data-testid="stWidgetLabel"] {
-            display: flex !important;
-            justify-content: center !important;
-            width: 100% !important;
-            text-align: center !important;
+        /* הקטנת הגובה והרווחים בתיבות הבחירה ברשימה */
+        div[data-baseweb="select"] {
+            min-height: 32px !important;
+            max-width: 130px !important;
+            margin: 0 auto !important;
         }
         
+        div[data-baseweb="select"] > div {
+            min-height: 32px !important;
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
+            font-size: 14px !important;
+        }
+
         /* יישור אנכי (בדיוק באותו גובה) לכל העמודות ברשימה */
         [data-testid="stHorizontalBlock"] {
             align-items: center !important;
-        }
-
-        /* מרכוז הטקסט הנבחר והפנימי בתוך תיבות Selectbox */
-        div[data-baseweb="select"] {
-            text-align: center !important;
-        }
-        div[data-baseweb="select"] > div {
-            justify-content: center !important;
-            text-align: center !important;
-        }
-        div[data-baseweb="select"] span {
-            width: 100% !important;
-            text-align: center !important;
         }
 
         /* מרכוז שדות מספר (number_input) */
@@ -100,9 +93,9 @@ with st.form("add_player_form", clear_on_submit=True):
 # --- הצגה ועריכת שחקנים ---
 if st.session_state.players:
     st.subheader(f"📋 רשימת השחקנים ({len(st.session_state.players)})")
-    st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות בטבלה למטה:")
+    st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות ברשימה למטה:")
 
-    # עריכת השחקנים ברשימה
+    # עריכת השחקנים ברשימה (עם תיבות קטנות יותר)
     to_delete = None
     for idx, player in enumerate(st.session_state.players):
         col_name, col_pos, col_lvl, col_del = st.columns([3, 2, 2, 1])
