@@ -3,6 +3,25 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
+# --- עיצוב CSS למרכוז כל הטקסטים והאלמנטים באפליקציה ---
+st.markdown("""
+    <style>
+        /* מרכוז טקסט כללי, כותרות ופסקאות */
+        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, div {
+            text-align: center !important;
+        }
+        /* מרכוז טפסים וכפתורים */
+        .stButton>button {
+            display: block;
+            margin: 0 auto;
+        }
+        /* מרכוז שדות קלט */
+        div[data-baseweb="input"] {
+            justify-content: center;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🏀 מחולק הקבוצות לכדורסל")
 st.write("הכנס את רשימת השחקנים, העמדה והרמה לקבלת קבוצות מאוזנות!")
 
@@ -54,7 +73,6 @@ if st.session_state.players:
         with col_name:
             st.markdown(f"**{player['name']}**")
         with col_pos:
-            # עדכון עמדה
             new_pos = st.selectbox(
                 f"עמדה עבור {player['name']}",
                 POSITION_OPTIONS,
@@ -64,7 +82,6 @@ if st.session_state.players:
             )
             st.session_state.players[idx]["position"] = new_pos
         with col_lvl:
-            # עדכון רמה
             new_lvl = st.selectbox(
                 f"רמה עבור {player['name']}",
                 LEVEL_OPTIONS,
@@ -77,7 +94,6 @@ if st.session_state.players:
             if st.button("❌", key=f"del_{idx}"):
                 to_delete = idx
 
-    # מחיקת שחקן במידה ונלחץ כפתור המחיקה
     if to_delete is not None:
         st.session_state.players.pop(to_delete)
         st.rerun()
@@ -91,10 +107,8 @@ if st.session_state.players:
 
     # --- אלגוריתם החלוקה ---
     def split_teams(players_list, max_players):
-        # מיון לפי ערך נומרי של הרמה (חזק = 3, בינוני = 2, חלש = 1) בסדר יורד
         sorted_p = sorted(players_list, key=lambda x: LEVEL_MAP[x["level"]], reverse=True)
         
-        # מיון משנה לפי עמדות
         positions = {"רכז": [], "קלעי": [], "גבוה": []}
         for p in sorted_p:
             positions[p["position"]].append(p)
