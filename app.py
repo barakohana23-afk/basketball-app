@@ -3,21 +3,41 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
-# --- עיצוב CSS למרכוז כל הטקסטים והאלמנטים באפליקציה ---
+# --- עיצוב CSS מורחב למרכוז מלא של כל הרכיבים ---
 st.markdown("""
     <style>
-        /* מרכוז טקסט כללי, כותרות ופסקאות */
-        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, div {
+        /* מרכוז טקסט כללי, כותרות, פסקאות ותוויות של שדות (Labels) */
+        html, body, [class*="css"], .stMarkdown, h1, h2, h3, h4, h5, h6, p, label, div {
             text-align: center !important;
         }
-        /* מרכוז טפסים וכפתורים */
-        .stButton>button {
-            display: block;
-            margin: 0 auto;
+        
+        /* מרכוז תוויות הסבר של שדות קלט */
+        .stWidgetLabel label, label[data-testid="stWidgetLabel"] {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+            text-align: center !important;
         }
-        /* מרכוז שדות קלט */
-        div[data-baseweb="input"] {
-            justify-content: center;
+        
+        /* מרכוז שדות מספר (number_input) והפקדים הפנימיים */
+        div[data-testid="stNumberInput"] {
+            margin: 0 auto !important;
+            max-width: 300px;
+        }
+        div[data-testid="stNumberInput"] input {
+            text-align: center !important;
+        }
+
+        /* מרכוז כפתורים */
+        .stButton>button {
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        
+        /* מרכוז שדות קלט טקסט ותפריטים נפתחים */
+        div[data-baseweb="input"], div[data-baseweb="select"] {
+            justify-content: center !important;
+            text-align: center !important;
         }
     </style>
 """, unsafe_allow_html=True)
