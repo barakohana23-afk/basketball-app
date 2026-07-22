@@ -87,7 +87,7 @@ LEVEL_MAP = {"חלש": 1, "בינוני": 2, "חזק": 3}
 LEVEL_OPTIONS = ["חלש", "בינוני", "חזק"]
 POSITION_OPTIONS = ["רכז", "קלעי", "גבוה"]
 
-# רשימת שחקני הבית הקבועים (הרמה נשמרת כאן כרגיל!)
+# רשימת שחקני הבית הקבועים
 DEFAULT_PLAYERS = [
     {"name": "לירון", "position": "גבוה", "level": "חזק"},
     {"name": "ירין", "position": "רכז", "level": "חזק"},
@@ -124,10 +124,10 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        # הצגת השם והעמדה בלבד (ללא הרמה)
+        # הצגת השם והעמדה בלבד
         label_text = f"**{p['name']}**\n\n{p['position']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
-            selected_defaults.append(p) # האובייקט p שומר בתוכו גם את הרמה!
+            selected_defaults.append(p)
 
 if st.button("➕ הוסף את המסומנים לרשימת המשחק"):
     added_count = 0
@@ -178,7 +178,7 @@ with st.form("add_player_form", clear_on_submit=True):
 # --- הצגה ועריכת שחקנים ---
 if st.session_state.players:
     st.subheader(f"📋 רשימת השחקנים למשחק ({len(st.session_state.players)})")
-    st.write("💡 ניתן לשנות עמדה ורמה של שחקן ישירות ברשימה למטה:")
+    st.write("💡 ניתן לשנות עמדה של שחקן ישירות ברשימה למטה:")
 
     to_delete = None
     for idx, player in enumerate(st.session_state.players):
@@ -195,11 +195,9 @@ if st.session_state.players:
                 label_visibility="collapsed"
             )
             st.session_state.players[idx]["position"] = new_pos
-
-            # מוחקים את עמודת הרמה מהחלוקה
-        col_name, col_pos, col_del = st.columns([3, 2, 1])
-            
-            st.session_state.players[idx]["level"] = new_lvl
+        with col_lvl:
+            # הרמה מוצגת כטקסט קבוע בלבד ללא תיבת בחירה
+            st.write(player["level"])
         with col_del:
             if st.button("❌", key=f"del_{idx}"):
                 to_delete = idx
