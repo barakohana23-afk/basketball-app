@@ -220,61 +220,64 @@ if st.session_state.players:
             st.session_state.players = []
             st.rerun()
 
-    # --- אלגוריתם החלוקה לפי ניקוד וחוקי הברזל ---
+    # --- אלגוריתם חלוקה תומך מרובה קבוצות (2, 3 או יותר) ---
+    def generate_team_partitions(players, team_size, num_teams):
+        """פונקציה רקורסיבית לחלוקת רשימת שחקנים ל-num_teams קבוצות בגודל team_size"""
+        if num_teams == 1:
+            yield [players]
+            return
+            
+        for first_team in combinations(players, team_size):
+            remaining = [p for p in players if p not in first_team]
+            for rest in generate_team_partitions(remaining, team_size, num_teams - 1):
+                yield [list(first_team)] + rest
+
     def split_teams(players_list, max_players):
-        total_slots = max_players * 2
+        # חישוב כמות הקבוצות המלאות שאפשר להרכיב
+        num_teams = len(players_list) // max_players
+        if num_teams < 2:
+            num_teams = 2 # ברירת מחדל מינימלית
+            
+        total_slots = num_teams * max_players
         
-        # 1. ערבוב אקראי שוויוני לקביעת סיכוי שווה לכל השחקנים להיכנס לרוטציה
         shuffled = players_list.copy()
         random.shuffle(shuffled)
         
-        # 2. הפרדה בין המשתתפים במשחק לבין רשימת ההמתנה
         active_players = shuffled[:total_slots]
         waiting = shuffled[total_slots:]
         
-        if len(active_players) < 2:
-            return active_players, [], waiting
+        if len(active_players) < max_players * 2:
+            return [active_players], waiting
 
-        team_size = len(active_players) // 2
-        
-        best_team_a = []
-        best_team_b = []
-        
+        best_partition = None
         min_score_diff = float('inf')
         max_diversity = -1
         max_pos_balance = -1
 
-        # זיהוי השחקנים ששווים 4 נקודות מתוך אלו שנבחרו לשחק
         top_players = [p for p in active_players if get_player_score(p) == 4]
 
-        # 3. בדיקת כל האפשרויות לחלוקה
-        for team_a_combo in combinations(active_players, team_size):
-            team_a = list(team_a_combo)
-            team_b = [p for p in active_players if p not in team_a]
-            
-            # --- חוק הברזל: פיצול שחקני רמה 4 ---
-            if len(top_players) == 2:
-                top_in_a = sum(1 for p in team_a if get_player_score(p) == 4)
-                if top_in_a != 1:
-                    continue  # פוסל קומבינציה שבה שניהם ביחד באותה קבוצה!
+        for partition in generate_team_partitions(active_players, max_players, num_teams):
+            # --- חוק הברזל: פיצול שחקני רמה 4 שווה בשווה ---
+            # אם מספר שחקני רמה 4 בדיוק שווה למספר הקבוצות (למשל 2 ב-2 קבוצות, או 3 ב-3 קבוצות)
+            if len(top_players) == num_teams:
+                # לוודא שבכל קבוצה יש בדיוק שחקן אחד ברמה 4
+                if any(sum(1 for p in team if get_player_score(p) == 4) != 1 for team in partition):
+                    continue
 
-            # תנאי 1: חישוב ניקוד הכוח וההפרש
-            score_a = sum(get_player_score(p) for p in team_a)
-            score_b = sum(get_player_score(p) for p in team_b)
-            score_diff = abs(score_a - score_b)
+            # 1. חישוב הפרש ניקוד מקסימלי בין הקבוצות
+            scores = [sum(get_player_score(p) for p in team) for team in partition]
+            score_diff = max(scores) - min(scores)
             
-            # תנאי 2: מגוון עמדות בכל קבוצה
-            pos_a = set(p["position"] for p in team_a)
-            pos_b = set(p["position"] for p in team_b)
-            total_diversity = len(pos_a) + len(pos_b)
+            # 2. מגוון עמדות כולל
+            total_diversity = sum(len(set(p["position"] for p in team)) for team in partition)
             
-            # תנאי 3: איזון עמדות בין א' לב'
-            positions_a = [p["position"] for p in team_a]
-            positions_b = [p["position"] for p in team_b]
-            all_positions = set(positions_a + positions_b)
-            pos_balance = sum(min(positions_a.count(pos), positions_b.count(pos)) for pos in all_positions)
-            
-            # עדכון הקבוצה הטובה ביותר
+            # 3. איזון עמדות בין הקבוצות
+            all_positions = set(p["position"] for p in active_players)
+            pos_balance = 0
+            for pos in all_positions:
+                pos_counts = [sum(1 for p in team if p["position"] == pos) for team in partition]
+                pos_balance += min(pos_counts)
+
             if (score_diff < min_score_diff) or \
                (score_diff == min_score_diff and total_diversity > max_diversity) or \
                (score_diff == min_score_diff and total_diversity == max_diversity and pos_balance > max_pos_balance):
@@ -282,35 +285,36 @@ if st.session_state.players:
                 min_score_diff = score_diff
                 max_diversity = total_diversity
                 max_pos_balance = pos_balance
-                best_team_a = team_a
-                best_team_b = team_b
+                best_partition = partition
 
-        return best_team_a, best_team_b, waiting
+        return best_partition, waiting
 
     # --- כפתור החלוקה ---
     with col_split:
         if st.button("⚡ חלק לקבוצות!", type="primary"):
-            team_a, team_b, waiting = split_teams(st.session_state.players, max_per_team)
-            
-            score_a = sum(get_player_score(p) for p in team_a)
-            score_b = sum(get_player_score(p) for p in team_b)
+            teams, waiting = split_teams(st.session_state.players, max_per_team)
             
             st.divider()
-            col_a, col_b = st.columns(2)
             
-            with col_a:
-                st.success(f"🟢 **קבוצה א' ({len(team_a)}/{max_per_team})**\n\n💪 ניקוד כוח: **{score_a}**")
-                for p in team_a:
-                    pts = get_player_score(p)
-                    st.write(f"• **{p['name']}** ({p['position']} | {p['level']} - {pts} נק')")
-                    
-            with col_b:
-                st.info(f"🔵 **קבוצה ב' ({len(team_b)}/{max_per_team})**\n\n💪 ניקוד כוח: **{score_b}**")
-                for p in team_b:
-                    pts = get_player_score(p)
-                    st.write(f"• **{p['name']}** ({p['position']} | {p['level']} - {pts} נק')")
+            # הצגת הקבוצות בצורה דינמית לפי הכמות שנפתחה (2, 3 וכו')
+            cols_teams = st.columns(len(teams))
+            colors = ["🟢", "🔵", "🟠", "🟣", "🔴"]
+            
+            for i, team in enumerate(teams):
+                col = cols_teams[i % len(cols_teams)]
+                score = sum(get_player_score(p) for p in team)
+                team_char = chr(65 + i) # אותיות A, B, C...
+                hebrew_letters = ["א'", "ב'", "ג'", "ד'", "ה'"]
+                team_name = hebrew_letters[i] if i < len(hebrew_letters) else team_char
+                
+                with col:
+                    st.success(f"{colors[i % len(colors)]} **קבוצה {team_name} ({len(team)}/{max_per_team})**\n\n💪 ניקוד כוח: **{score}**")
+                    for p in team:
+                        pts = get_player_score(p)
+                        st.write(f"• **{p['name']}** ({p['position']} | {p['level']} - {pts} נק')")
                     
             if waiting:
+                st.write("")
                 st.warning(f"📋 **רשימת מזמינים / המתנה ({len(waiting)})**")
                 for p in waiting:
                     pts = get_player_score(p)
