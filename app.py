@@ -87,7 +87,7 @@ LEVEL_MAP = {"חלש": 1, "בינוני": 2, "חזק": 3}
 LEVEL_OPTIONS = ["חלש", "בינוני", "חזק"]
 POSITION_OPTIONS = ["רכז", "קלעי", "גבוה"]
 
-# רשימת שחקני הבית הקבועים
+# רשימת שחקני הבית הקבועים (הרמה נשמרת כאן כרגיל!)
 DEFAULT_PLAYERS = [
     {"name": "לירון", "position": "גבוה", "level": "חזק"},
     {"name": "ירין", "position": "רכז", "level": "חזק"},
@@ -124,9 +124,10 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
+        # הצגת השם והעמדה בלבד (ללא הרמה)
         label_text = f"**{p['name']}**\n\n{p['position']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
-            selected_defaults.append(p)
+            selected_defaults.append(p) # האובייקט p שומר בתוכו גם את הרמה!
 
 if st.button("➕ הוסף את המסומנים לרשימת המשחק"):
     added_count = 0
@@ -195,14 +196,14 @@ if st.session_state.players:
             )
             st.session_state.players[idx]["position"] = new_pos
         with col_lvl:
-          # ---  new_lvl = st.selectbox(
-           # ---     f"רמה עבור {player['name']}",
-               # --- LEVEL_OPTIONS,
-                # ---index=LEVEL_OPTIONS.index(player["level"]),
-           # ---     key=f"lvl_{idx}",
-           # ---     label_visibility="collapsed"
-         # ---   )
-        # ---    st.session_state.players[idx]["level"] = new_lvl
+            new_lvl = st.selectbox(
+                f"רמה עבור {player['name']}",
+                LEVEL_OPTIONS,
+                index=LEVEL_OPTIONS.index(player["level"]),
+                key=f"lvl_{idx}",
+                label_visibility="collapsed"
+            )
+            st.session_state.players[idx]["level"] = new_lvl
         with col_del:
             if st.button("❌", key=f"del_{idx}"):
                 to_delete = idx
