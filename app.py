@@ -195,14 +195,10 @@ if st.session_state.players:
                 label_visibility="collapsed"
             )
             st.session_state.players[idx]["position"] = new_pos
-        with col_lvl:
-            new_lvl = st.selectbox(
-                f"רמה עבור {player['name']}",
-                LEVEL_OPTIONS,
-                index=LEVEL_OPTIONS.index(player["level"]),
-                key=f"lvl_{idx}",
-                label_visibility="collapsed"
-            )
+
+            # מוחקים את עמודת הרמה מהחלוקה
+        col_name, col_pos, col_del = st.columns([3, 2, 1])
+            
             st.session_state.players[idx]["level"] = new_lvl
         with col_del:
             if st.button("❌", key=f"del_{idx}"):
