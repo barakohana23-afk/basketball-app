@@ -222,7 +222,6 @@ if st.session_state.players:
 
     # --- אלגוריתם חלוקה תומך מרובה קבוצות (2, 3 או יותר) ---
     def generate_team_partitions(players, team_size, num_teams):
-        """פונקציה רקורסיבית לחלוקת רשימת שחקנים ל-num_teams קבוצות בגודל team_size"""
         if num_teams == 1:
             yield [players]
             return
@@ -233,10 +232,9 @@ if st.session_state.players:
                 yield [list(first_team)] + rest
 
     def split_teams(players_list, max_players):
-        # חישוב כמות הקבוצות המלאות שאפשר להרכיב
         num_teams = len(players_list) // max_players
         if num_teams < 2:
-            num_teams = 2 # ברירת מחדל מינימלית
+            num_teams = 2
             
         total_slots = num_teams * max_players
         
@@ -257,21 +255,16 @@ if st.session_state.players:
         top_players = [p for p in active_players if get_player_score(p) == 4]
 
         for partition in generate_team_partitions(active_players, max_players, num_teams):
-            # --- חוק הברזל: פיצול שחקני רמה 4 שווה בשווה ---
-            # אם מספר שחקני רמה 4 בדיוק שווה למספר הקבוצות (למשל 2 ב-2 קבוצות, או 3 ב-3 קבוצות)
+            # חוק הברזל: פיצול שחקני רמה 4 שווה בשווה
             if len(top_players) == num_teams:
-                # לוודא שבכל קבוצה יש בדיוק שחקן אחד ברמה 4
                 if any(sum(1 for p in team if get_player_score(p) == 4) != 1 for team in partition):
                     continue
 
-            # 1. חישוב הפרש ניקוד מקסימלי בין הקבוצות
             scores = [sum(get_player_score(p) for p in team) for team in partition]
             score_diff = max(scores) - min(scores)
             
-            # 2. מגוון עמדות כולל
             total_diversity = sum(len(set(p["position"] for p in team)) for team in partition)
             
-            # 3. איזון עמדות בין הקבוצות
             all_positions = set(p["position"] for p in active_players)
             pos_balance = 0
             for pos in all_positions:
@@ -296,15 +289,29 @@ if st.session_state.players:
             
             st.divider()
             
-            # הצגת הקבוצות בצורה דינמית לפי הכמות שנפתחה (2, 3 וכו')
-            cols_teams = st.columns(len(teams))
+            hebrew_letters = ["א'", "ב'", "ג'", "ד'", "ה'"]
             colors = ["🟢", "🔵", "🟠", "🟣", "🔴"]
+            
+            # --- סדר משחקים כשיש 3 קבוצות או יותר ---
+            if len(teams) >= 3:
+                team_names = [f"קבוצה {hebrew_letters[i]}" for i in range(len(teams))]
+                # הגרלת הקבוצה שתנוח במשחק הראשון
+                resting_team_idx = random.randint(0, len(teams) - 1)
+                resting_team_name = team_names[resting_team_idx]
+                
+                playing_teams = [name for i, name in enumerate(team_names) if i != resting_team_idx]
+                
+                st.subheader("🎲 תוצאות הגרלת סדר המשחקים")
+                st.info(f"🔥 **משחק 1 (פתיחה):** {playing_teams[0]} 🆚 {playing_teams[1]}")
+                st.warning(f"☕ **נחה במשחק הראשון:** {resting_team_name}")
+                st.write("---")
+
+            cols_teams = st.columns(len(teams))
             
             for i, team in enumerate(teams):
                 col = cols_teams[i % len(cols_teams)]
                 score = sum(get_player_score(p) for p in team)
-                team_char = chr(65 + i) # אותיות A, B, C...
-                hebrew_letters = ["א'", "ב'", "ג'", "ד'", "ה'"]
+                team_char = chr(65 + i)
                 team_name = hebrew_letters[i] if i < len(hebrew_letters) else team_char
                 
                 with col:
