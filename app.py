@@ -3,6 +3,12 @@ import streamlit as st
 # הגדרת כותרת האפליקציה והגדרות עמוד
 st.set_page_config(page_title="חלוקת קבוצות כדורסל", page_icon="🏀", layout="centered")
 
+# --- מנגנון להצגת Toast בסלולר (שורד st.rerun) ---
+if "toast_message" in st.session_state and st.session_state.toast_message:
+    msg, icon = st.session_state.toast_message
+    st.toast(msg, icon=icon)
+    st.session_state.toast_message = None
+
 # --- עיצוב CSS מותאם: דריסת צבע פונט לשחור גם בסלולר וב-Dark Mode ---
 st.markdown("""
     <style>
@@ -124,7 +130,6 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        # הצגת השם והעמדה בלבד
         label_text = f"**{p['name']}**\n\n{p['position']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
             selected_defaults.append(p)
@@ -139,8 +144,8 @@ if st.button("➕ הוסף את המסומנים לרשימת המשחק"):
             added_count += 1
             
     if added_count > 0:
-        # 🔔 הודעה קופצת (Toast)
-        st.toast(f"נוספו {added_count} שחקנים לרשימה בהצלחה!", icon="🏀")
+        # 🔔 שומרים את ההודעה לטעינה הבאה כדי שתעבוד בסלולר
+        st.session_state.toast_message = (f"נוספו {added_count} שחקנים לרשימה בהצלחה!", "🏀")
         st.rerun()
     elif len(selected_defaults) == 0:
         st.warning("לא סומנו שחקנים לבחירה.")
@@ -171,8 +176,8 @@ with st.form("add_player_form", clear_on_submit=True):
                 st.error(f"⚠️ השחקן '{clean_name}' כבר קיים ברשימה!")
             else:
                 st.session_state.players.append({"name": clean_name, "position": position, "level": level})
-                # 🔔 הודעה קופצת (Toast)
-                st.toast(f"השחקן {clean_name} נוסף בהצלחה!", icon="👤")
+                # 🔔 שומרים את ההודעה לטעינה הבאה
+                st.session_state.toast_message = (f"השחקן {clean_name} נוסף בהצלחה!", "👤")
                 st.rerun()
         else:
             st.error("נא להזין שם שחקן.")
@@ -198,7 +203,6 @@ if st.session_state.players:
             )
             st.session_state.players[idx]["position"] = new_pos
         with col_lvl:
-            # הרמה מוצגת כטקסט קבוע בלבד
             st.write(player["level"])
         with col_del:
             if st.button("❌", key=f"del_{idx}"):
@@ -215,9 +219,7 @@ if st.session_state.players:
             st.session_state.players = []
             st.rerun()
 
-    # =========================================================
-    # 🧠 אלגוריתם החלוקה (שורות 214-245)
-    # =========================================================
+    # --- אלגוריתם החלוקה ---
     def split_teams(players_list, max_players):
         strong_bigs = [p for p in players_list if p["position"] == "גבוה" and p["level"] == "חזק"]
         other_bigs = [p for p in players_list if p["position"] == "גבוה" and p["level"] != "חזק"]
