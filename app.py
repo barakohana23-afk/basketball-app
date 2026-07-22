@@ -124,7 +124,7 @@ selected_defaults = []
 for idx, p in enumerate(DEFAULT_PLAYERS):
     col = cols[idx % 3]
     with col:
-        label_text = f"**{p['name']}**\n\n{p['position']} | {p['level']}"
+        label_text = f"**{p['name']}**\n\n{p['position']}"
         if st.checkbox(label_text, key=f"default_{idx}"):
             selected_defaults.append(p)
 
